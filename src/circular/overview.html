@@ -1,0 +1,93 @@
+<body>
+	Circular Frameworkとは、システム間連携の共通基盤として開発された、各システム固有の処理をプラグインによって実装できるポーリングアプリケーションです。
+	<p>
+	<h3>開発の背景</h3>
+	ここではCircular Frameworkが開発された背景を説明します。
+	<p>
+	YM2の前身であるYM1-ARIES間では、一日に一度、B/T処理により作成された申込データのやり取りを行ってきました。
+	<br>
+	しかしYM1からYM2へ移行するにあたり、申込データのリアルタイムでのやり取りを行いたいという、以前からの要望を実現するために、申込があるたびに両DB間で直接データの受け渡しを行う方法を採用することになりました。
+	<br>
+	そのためには、起動し続けたまま一定間隔で処理を実行するポーリングアプリケーションが必要であるということから、両システムでの申込データ受け渡しの共通基盤となる、Circular Frameworkが開発されました。
+	<p>
+	<h3>新たな連携</h3>
+	当初、Circular Frameworkは、YM2-ARIES連携専用に設計されていました。しかし、その後CSMOSとの連携、新規版との連携と、要件が増えてきたためもっと汎用的に使えるよう改良されました。
+	<br>
+	改良点として
+	<ol>
+		<li>一つのCircularで別々の設定による複数サイクルが、併走して実行できるようにしました。複数システムと連携をする場合、接続先、処理間隔を変えて実行することができます。
+		<li>YM2-ARIES連携用のデータクラス等をCircular Frameworkから除外し、アタッチメントとして追加できるようにしました。
+		<li>InputPhase、OutputPhaseという制約をなくし、すべてのプラグインは{@link circular.framework.Phase}から派生するようにしました。以前のInputPhaseもそのまま利用できます。
+		<li>プラグインやライブラリのロード方法を所定の場所に置くだけという簡単なものにしました。
+	</ol>
+	があげられます。
+
+	<h3>Circular Frameworkができること</h3>
+
+	<ol>
+		<li>インストールされた個別処理プラグインの管理を行います。設定用ファイルから個別処理プラグインのロード、インスタンス化、呼び出しを行うことが可能です。
+		<br>
+		{@link circular.framework.Configure}
+		{@link circular.framework.Circular}
+		{@link circular.framework.Cycle}
+		{@link circular.framework.Observer}
+		<p>
+
+		<li>サイクル方法を選択することが可能です。
+		<br>
+		{@link circular.framework.Configure}
+		{@link circular.framework.CycleStrategy}
+		<p>
+
+		<li>他システムワークテーブルのあるDBへの接続を確立し、他システムワークテーブルからデータを読込み、それをプラグインに渡すことが可能です。その後該当データの削除を行います。
+		<br>
+		{@link circular.framework.phase.InputPhase}
+		{@link circular.framework.phase.InputPhaseElement}
+		{@link circular.framework.phase.CircularBean}
+		<p>
+
+		<li>自システムワークテーブルのあるDBへの接続を確立し、プラグインから簡単に自システムワークテーブルへデータを書込めるようサポートします。
+		<br>
+		{@link circular.framework.Phase}
+		{@link circular.framework.phase.CircularBean}
+		{@link circular.framework.phase.CircularBean.Inserter}
+		<p>
+
+		<li>自システムテーブルのあるDBへの接続を確立し、プラグインから自システムテーブルへの操作を可能にします。
+		<br>
+		{@link circular.framework.Cycle#getOurConnection()}
+		<p>
+
+		<li>Windows上でのCircular Frameworkの起動が簡単に行えます。
+		<br>
+		{@link circular.ui.Main}
+		<p>
+
+		<li>運用担当者用操作パネルが用意されています。Circular Frameworkの終了、一時停止、再開がボタン操作で行えます。
+		<br>
+		{@link circular.ui.Main}
+		<p>
+
+		<li>バッチ処理等からの一時停止／再開命令を待ちうけることが可能です。起動後にTCP/IP接続による一時停止、再開指示、又は現在の状態（実行中／停止中）を受け付けるサーバアプリケーションとして動作することで実現しています。
+		<br>
+		{@link circular.framework.ControlServer}
+		{@link circular.framework.ControlProtocol}
+		{@link circular.framework.ControlProtocol.Method}
+		{@link circular.framework.ControlProtocol.Status}
+		{@link circular.ui.CircularController}
+		<p>
+
+		<li>Circular Framework内部で重大なエラーが発生した場合、それを警報メールとしてあらかじめ定義したアドレス宛に送信することが可能です。
+		<br>
+		{@link circular.ui.AlertMail}
+		<p>
+
+		<li>Circular Framework自身の起動、サイクルの開始、終了や、プラグインから使用するjarやクラスを所定の場所に配置するだけでロードします。
+		<br>
+		{@link circular.bootstrap.Loader}
+		<p>
+	</ol>
+
+	<h3>プラグイン実装に関しての注意点</h3>
+	Circular Frameworkでは、{@link java.lang.Thread}の割り込みステータスを利用して、一時停止、アプリケーションの終了を通知しています。プラグイン内部で{@link java.lang.Thread#interrupted()}を使用すると、スレッドの割り込みステータスをクリアしてしまい、正常に停止することができなくなってしまう可能性があります。どうしても割り込みステータスを参照する必要がある場合は{@link java.lang.Thread#isInterrupted()}を使用してください。
+</body>

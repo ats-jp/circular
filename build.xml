@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="Windows-31J"?>
+
+<!-- $Name:  $ -->
+
+<!--
+Circular FrameworkのAnt用build.xmlです。以下のターゲットが定義されています。
+・デフォルト
+	Circular Frameworkアプリケーションをビルドし、zipファイルに圧縮します。
+	zipファイルの名称はcircular.zipです。
+・javadoc
+	Circular FrameworkのJavadocを生成し、zipファイルに圧縮します。
+	zipファイルの名称はcircular-api.zipです。
+・cleanup
+	ビルド中に生成されたファイルをすべて削除します。
+-->
+
+<project name="circular" default="build" basedir=".">
+
+	<property name="build.dir" value="build" />
+	<property name="target.dir" value="circular" />
+	<property name="target.classes.dir" value="${target.dir}/classes" />
+	<property name="target.lib.dir" value="${target.dir}/lib" />
+	<property name="target.config.dir" value="${target.dir}/config" />
+
+	<path id="project.classpath">
+		<pathelement path="${build.dir}" />
+		<pathelement location="lib/commons-logging.jar" />
+		<pathelement location="lib/mail.jar" />
+	</path>
+
+	<!--
+	ビルドすることで作成されるファイルを削除します。
+	-->
+	<target name="cleanup">
+		<delete file="circular.zip" />
+		<delete file="circular-api.zip" />
+		<delete file="circular.jar" />
+		<delete file="bootstrap.jar" />
+		<delete dir="${build.dir}" />
+		<delete dir="${target.dir}" />
+		<delete dir="circular-api" />
+	</target>
+
+	<!--
+	Circular Frameworkをビルドします。
+	-->
+	<target name="build" depends="cleanup">
+		<mkdir dir="${target.dir}" />
+		<mkdir dir="${build.dir}" />
+		<mkdir dir="${target.classes.dir}" />
+		<mkdir dir="${target.lib.dir}" />
+		<mkdir dir="${target.config.dir}" />
+
+		<copy todir="${target.dir}">
+			<fileset dir="." includes="*.bat" />
+		</copy>
+
+		<copy todir="${target.lib.dir}">
+			<fileset dir="lib" includes="*.jar" />
+		</copy>
+
+		<copy todir="${target.classes.dir}" file="log4j.xml" overwrite="true" />
+
+		<copy todir="${target.config.dir}" file="CircularFrameworkConfigure.properties" />
+		<copy todir="${target.config.dir}" file="AlertMail.properties" />
+		<copy todir="${target.config.dir}" file="ObserverFactory.properties" />
+		<copy todir="${target.config.dir}" file="observers" />
+
+		<javac srcdir="src" destdir="${build.dir}" debug="true" optimize="true" deprecation="true" encoding="Windows-31J">
+			<classpath refid="project.classpath" />
+			<include name="**/*.java" />
+		</javac>
+
+		<copy todir="${build.dir}">
+			<fileset dir="src" includes="**/*.java" />
+			<fileset dir="src" includes="**/*.png" />
+			<fileset dir="src" includes="log4j.xml" />
+			<fileset dir="src" includes="circular-version.txt" />
+		</copy>
+
+		<jar jarfile="circular.jar">
+			<fileset dir="${build.dir}">
+				<exclude name="**/bootstrap/**" />
+			</fileset>
+		</jar>
+		<jar jarfile="bootstrap.jar" manifest="MANIFEST.MF">
+			<fileset dir="${build.dir}">
+				<include name="**/bootstrap/**" />
+			</fileset>
+		</jar>
+
+		<copy todir="${target.lib.dir}" file="circular.jar" />
+		<copy todir="${target.dir}" file="bootstrap.jar" />
+
+		<zip zipfile="circular.zip" basedir="circular" />
+	</target>
+
+	<!--
+	Circular FrameworkのJavadocを生成します。
+	-->
+	<target name="javadoc" depends="cleanup">
+		<mkdir dir="circular-api" />
+
+		<javadoc sourcepath="src" destdir="circular-api" overview="src/circular/overview.html" windowtitle="Circular Framework API" doctitle="Circular Framework API" charset="Windows-31J">
+			<classpath refid="project.classpath" />
+			<link offline="true" href="http://java.sun.com/javase/ja/6/docs/ja/api/" packagelistLoc="." />
+		</javadoc>
+
+		<zip zipfile="circular-api.zip" basedir="circular-api" />
+	</target>
+</project>
